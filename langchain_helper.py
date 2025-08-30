@@ -65,9 +65,6 @@ few_shot_prompt = FewShotPromptTemplate(
     input_variables=["input"]
 )
 
-final_prompt = few_shot_prompt.format(input="How many Adidas T shirts I have left in my store?")
-print(final_prompt)
-
 few_shot_examples_str = few_shot_prompt.format(input="{input}")
 
 mysql_instructions = """
