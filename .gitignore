@@ -2,3 +2,4 @@
 .env
 chroma_db_fewshots
 __pycache__
+project_plan.ipynb
