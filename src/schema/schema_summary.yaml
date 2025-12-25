@@ -1,0 +1,233 @@
+tables:
+  aisles:
+    columns:
+      aisle_id:
+        data_type: bigint
+        nullable: false
+        ordinal_position: 1
+        description: Unique aisle identifier
+      aisle:
+        data_type: text
+        nullable: true
+        ordinal_position: 2
+        description: Name of the aisle
+    primary_key:
+    - aisle_id
+    foreign_keys: []
+    description: Product aisle categories (fine-grained grouping)
+  departments:
+    columns:
+      department_id:
+        data_type: bigint
+        nullable: false
+        ordinal_position: 1
+        description: Unique department identifier
+      department:
+        data_type: text
+        nullable: true
+        ordinal_position: 2
+        description: Name of the department
+    primary_key:
+    - department_id
+    foreign_keys: []
+    description: Product department categories (coarse-grained grouping)
+  order_products_prior:
+    columns:
+      order_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 1
+        description: Order identifier
+      product_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 2
+        description: Product included in the order
+      add_to_cart_order:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 3
+        description: Sequence in which the product was added to cart
+      reordered:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 4
+        description: 1 if the product was ordered by the user previously, else 0
+    primary_key: []
+    foreign_keys:
+    - column: order_id
+      references:
+        table: orders
+        column: order_id
+    - column: product_id
+      references:
+        table: products
+        column: product_id
+    description: Products included in prior (historical) orders
+  order_products_train:
+    columns:
+      order_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 1
+        description: Order identifier
+      product_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 2
+        description: Product included in the order
+      add_to_cart_order:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 3
+        description: Sequence in which the product was added to cart
+      reordered:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 4
+        description: 1 if the product was ordered by the user previously, else 0
+    primary_key: []
+    foreign_keys:
+    - column: order_id
+      references:
+        table: orders
+        column: order_id
+    - column: product_id
+      references:
+        table: products
+        column: product_id
+    description: Products included in training orders (used for prediction)
+  orders:
+    columns:
+      order_id:
+        data_type: bigint
+        nullable: false
+        ordinal_position: 1
+        description: Unique identifier for an order
+      user_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 2
+        description: Customer who placed the order
+      eval_set:
+        data_type: text
+        nullable: true
+        ordinal_position: 3
+      order_number:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 4
+        description: Sequence number of the order for a user
+      order_dow:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 5
+        description: Day of week when the order was placed (0=Saturday, 6=Friday)
+      order_hour_of_day:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 6
+        description: Hour of day when the order was placed (0–23)
+      days_since_prior_order:
+        data_type: double precision
+        nullable: true
+        ordinal_position: 7
+        description: Days since the user's previous order; NULL for first order
+    primary_key:
+    - order_id
+    foreign_keys: []
+    description: One row per customer order, including timing and sequence information
+  products:
+    columns:
+      product_id:
+        data_type: bigint
+        nullable: false
+        ordinal_position: 1
+        description: Unique product identifier
+      product_name:
+        data_type: text
+        nullable: true
+        ordinal_position: 2
+        description: Human-readable product name
+      aisle_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 3
+        description: Aisle category of the product
+      department_id:
+        data_type: bigint
+        nullable: true
+        ordinal_position: 4
+        description: Department category of the product
+    primary_key:
+    - product_id
+    foreign_keys:
+    - column: aisle_id
+      references:
+        table: aisles
+        column: aisle_id
+    - column: department_id
+      references:
+        table: departments
+        column: department_id
+    description: Product master table with category information
+hints:
+- orders.days_since_prior_order is NULL for a user's first order
+- reordered = 1 indicates the user has purchased the product before
+- order_products_prior contains historical orders; order_products_train is used for
+  model training
+- Products must be joined via order_products_* tables to access order-level information
+common_joins:
+- description: Products in historical orders
+  tables:
+  - orders
+  - order_products_prior
+  - products
+  joins:
+  - from: orders.order_id
+    to: order_products_prior.order_id
+    type: INNER
+  - from: order_products_prior.product_id
+    to: products.product_id
+    type: INNER
+- description: Products in training orders
+  tables:
+  - orders
+  - order_products_train
+  - products
+  joins:
+  - from: orders.order_id
+    to: order_products_train.order_id
+    type: INNER
+  - from: order_products_train.product_id
+    to: products.product_id
+    type: INNER
+- description: Product with aisle information
+  tables:
+  - products
+  - aisles
+  joins:
+  - from: products.aisle_id
+    to: aisles.aisle_id
+    type: INNER
+- description: Product with department information
+  tables:
+  - products
+  - departments
+  joins:
+  - from: products.department_id
+    to: departments.department_id
+    type: INNER
+- description: Complete product hierarchy (product → aisle → department)
+  tables:
+  - products
+  - aisles
+  - departments
+  joins:
+  - from: products.aisle_id
+    to: aisles.aisle_id
+    type: INNER
+  - from: products.department_id
+    to: departments.department_id
+    type: INNER
+  note: Aisles and departments are independent categorizations of products
