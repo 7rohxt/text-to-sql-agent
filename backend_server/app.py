@@ -1,11 +1,7 @@
-"""
-FastAPI backend for SQL Agent - Clean Architecture
-"""
 from fastapi import FastAPI
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Import from main.py instead of directly from agent
 from main import main as execute_sql_query
 
 load_dotenv()
@@ -36,9 +32,3 @@ def execute_query(request: QueryRequest):
     
     # Return the result
     return result
-
-
-# Run the server
-if __name__ == "__main__":
-    import uvicorn
-    # uvicorn.run(app, host="0.0.0.0", port=8000)
