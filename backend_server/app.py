@@ -4,10 +4,21 @@ from dotenv import load_dotenv
 
 from main import main as execute_sql_query
 
+from fastapi.middleware.cors import CORSMiddleware
+
 load_dotenv()
 
 # Create FastAPI app
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Define what data we expect from user
