@@ -44,21 +44,26 @@ class SQLAgent:
         graph = StateGraph(SQLAgentState)
         
         # Create wrapper functions that inject conn and cursor
-        def wrap_node(node_func):
-            return lambda state: node_func(state, self.conn, self.cursor)
-        
+        def wrap_node(node_func, node_name: str):
+            @observe(name=node_name)
+            def wrapped(state):
+                return node_func(state, self.conn, self.cursor)
+            return wrapped
+
+
+
         # Add all nodes
-        graph.add_node("planning", wrap_node(planning_node))
-        graph.add_node("generate_sql", wrap_node(generate_sql_node))
-        graph.add_node("validate_sql", wrap_node(validate_sql_node))
-        graph.add_node("execute_sql", wrap_node(execute_sql_node))
-        graph.add_node("validate_and_respond", wrap_node(validate_and_respond_node))
-        graph.add_node("correct_sql", wrap_node(correct_sql_node))
-        graph.add_node("analyze_failure", wrap_node(analyze_failure_node))
-        graph.add_node("generate_simplified", wrap_node(generate_simplified_sql_node))
-        graph.add_node("generate_alternative", wrap_node(generate_alternative_approach_node))
-        graph.add_node("ask_clarification", wrap_node(ask_clarification_node))
-        
+        graph.add_node("planning", wrap_node(planning_node, "planning"))
+        graph.add_node("generate_sql", wrap_node(generate_sql_node, "generate_sql"))
+        graph.add_node("validate_sql", wrap_node(validate_sql_node, "validate_sql"))
+        graph.add_node("execute_sql", wrap_node(execute_sql_node, "execute_sql"))
+        graph.add_node("validate_and_respond", wrap_node(validate_and_respond_node, "validate_and_respond"))
+        graph.add_node("correct_sql", wrap_node(correct_sql_node, "correct_sql"))
+        graph.add_node("analyze_failure", wrap_node(analyze_failure_node, "analyze_failure"))
+        graph.add_node("generate_simplified", wrap_node(generate_simplified_sql_node, "generate_simplified"))
+        graph.add_node("generate_alternative", wrap_node(generate_alternative_approach_node, "generate_alternative"))
+        graph.add_node("ask_clarification", wrap_node(ask_clarification_node, "ask_clarification"))
+
         # Set entry point
         graph.set_entry_point("planning")
         
