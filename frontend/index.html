@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instacart SQL Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    const Send = () => (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+      </svg>
+    );
+
+    const Loader = () => (
+      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    );
+
+    const Database = () => (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+      </svg>
+    );
+
+    const Code = () => (
+      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+      </svg>
+    );
+
+    const CheckCircle = () => (
+      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const XCircle = () => (
+      <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const Table = () => (
+      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    );
+
+    const Refresh = () => (
+      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    );
+
+    const Sparkles = () => (
+      <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    );
+
+    function SQLAgent() {
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const messagesEndRef = useRef(null);
+
+      const API_URL = 'http://127.0.0.1:8000'; // Update with your API URL
+
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages]);
+
+      const handleSend = async () => {
+        if (!input.trim() || isLoading) return;
+
+        const userMessage = input.trim();
+        setInput('');
+
+        setMessages(prev => [...prev, { 
+          role: 'user', 
+          content: userMessage, 
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        }]);
+        
+        setIsLoading(true);
+
+        try {
+          const response = await fetch(`${API_URL}/query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: userMessage }),
+          });
+
+          if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+          const data = await response.json();
+          console.log('Received data:', data);
+          
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: data.nl_response || 'No response',
+            data: data,
+            query: userMessage,
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          }]);
+
+        } catch (err) {
+          console.error('Fetch failed:', err);
+
+          setMessages(prev => [...prev, {
+            role: 'error',
+            content: 'Request failed. Please retry in a moment.',
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          }]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const renderSQLCard = (msg, idx) => {
+        const data = msg.data || {};
+        
+        return (
+          <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="mb-3 pb-3 border-b border-gray-300">
+              <div className="text-xs text-gray-500 mb-1">{msg.time}</div>
+              <div className="text-sm font-medium text-gray-800 mt-2">"{msg.query}"</div>
+            </div>
+
+            {data.sql && (
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Code />
+                  <span className="text-sm font-semibold text-gray-700">Generated SQL</span>
+                </div>
+                <div className="ml-6 bg-gray-900 text-green-400 p-3 rounded text-xs font-mono overflow-x-auto">
+                  {data.sql}
+                </div>
+              </div>
+            )}
+
+            {data.valid !== undefined && (
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  {data.valid ? <CheckCircle /> : <XCircle />}
+                  <span className="text-sm font-semibold text-gray-700">Validation</span>
+                </div>
+                <div className="ml-6 text-sm">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                    data.valid 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {data.valid ? 'VALID ✓' : 'INVALID ✗'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {data.executed !== undefined && (
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  {data.executed ? <CheckCircle /> : <XCircle />}
+                  <span className="text-sm font-semibold text-gray-700">Execution</span>
+                </div>
+                <div className="ml-6 text-sm">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                    data.executed 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {data.executed ? 'EXECUTED ⚡' : 'FAILED'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {data.results && data.results.length > 0 && (
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Table />
+                  <span className="text-sm font-semibold text-gray-700">Results</span>
+                </div>
+                <div className="ml-6 text-sm text-gray-600">
+                  <span className="font-mono font-semibold text-purple-600">{data.results.length}</span> rows returned
+                </div>
+              </div>
+            )}
+
+            {data.total_attempts !== undefined && data.total_attempts > 1 && (
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Refresh />
+                  <span className="text-sm font-semibold text-gray-700">Retry Attempts</span>
+                </div>
+                <div className="ml-6 text-sm text-gray-600">
+                  <span className="font-mono font-semibold text-orange-600">{data.total_attempts}</span> attempts
+                </div>
+              </div>
+            )}
+
+            {data.attempted_strategies && data.attempted_strategies.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles />
+                  <span className="text-sm font-semibold text-gray-700">Strategies Used</span>
+                </div>
+                <div className="ml-6 text-xs text-gray-500">
+                  {data.attempted_strategies.join(', ')}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      return (
+        <div className="flex h-screen bg-gray-50">
+          <div className="flex-1 flex flex-col">
+            <div className="bg-blue-600 border-b px-6 py-4 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                  <Database />
+                </div>
+                <div className="text-white">
+                  <h1 className="text-xl font-bold">Instacart SQL Agent</h1>
+                  <p className="text-sm text-blue-100">Transform natural language into SQL queries instantly</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-3xl mx-auto space-y-4">
+                {messages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Database />
+                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">Ask About Your Data</h2>
+                    <p className="text-gray-600 mb-6">Query the Instacart database using natural language</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                      {[
+                        "Show me the top 5 most ordered products",
+                        "What are the busiest shopping hours?",
+                        "Which departments have the most reorders?",
+                        "List products ordered on weekends"
+                      ].map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setInput(suggestion)}
+                          className="text-left px-4 py-3 bg-white border rounded-lg hover:border-blue-300 hover:bg-blue-50 text-sm text-gray-700 transition-all"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((msg, idx) => (
+                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-2xl rounded-2xl px-4 py-3 ${
+                          msg.role === 'user' 
+                            ? 'bg-blue-600 text-white' 
+                            : msg.role === 'error'
+                            ? 'bg-red-100 text-red-800 border border-red-200'
+                            : 'bg-white text-gray-800 shadow border border-gray-200'
+                        }`}>
+                          <div className="whitespace-pre-wrap">{msg.content}</div>
+                          <div className={`text-xs mt-1 ${msg.role === 'user' ? 'text-blue-100' : 'text-gray-400'}`}>
+                            {msg.time}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {isLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-white rounded-2xl px-4 py-3 shadow border border-gray-200 flex items-center gap-2">
+                          <Loader />
+                          <span className="text-sm text-gray-600">Converting to SQL and executing...</span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            <div className="bg-white border-t p-4 shadow-lg">
+              <div className="max-w-3xl mx-auto flex gap-3">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Ask about products, orders, departments..."
+                  disabled={isLoading}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 font-medium transition-all"
+                >
+                  {isLoading ? <Loader /> : <Send />}
+                  <span>Query</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-96 bg-white border-l shadow-lg overflow-y-auto">
+            <div className="sticky top-0 bg-blue-600 border-b px-4 py-4 z-10">
+              <h2 className="text-lg font-bold text-white">Query Details</h2>
+              <p className="text-xs text-blue-100 mt-1">SQL generation & execution insights</p>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {messages
+                .filter(msg => msg.role === 'assistant' && msg.data)
+                .slice(-5)
+                .reverse()
+                .map((msg, idx) => renderSQLCard(msg, idx))}
+
+              {messages.filter(msg => msg.role === 'assistant').length === 0 && (
+                <div className="text-center py-12 text-gray-400">
+                  <div className="flex justify-center mb-2">
+                    <Code />
+                  </div>
+                  <p className="text-sm">Query details will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<SQLAgent />, document.getElementById('root'));
+  </script>
+</body>
+</html>
