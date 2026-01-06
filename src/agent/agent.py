@@ -139,7 +139,11 @@ class SQLAgent:
             "total_attempts": 0
         }
         
-        final_state = self.graph.invoke(initial_state)
+        final_state = self.graph.invoke(
+        initial_state,
+        config={"recursion_limit": 100}
+        )
+
     
         return {
             "question": final_state["question"],
