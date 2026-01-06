@@ -23,6 +23,8 @@ from src.agent.routing import (
 )
 from src.db.db_connection import get_db_connection
 
+from langfuse import Langfuse
+from langfuse import observe
 
 class SQLAgent:
     """
@@ -34,6 +36,7 @@ class SQLAgent:
         self.conn = get_db_connection()
         self.cursor = self.conn.cursor()
         self.graph = self._build_graph()
+        self.langfuse = Langfuse()
         print("✅ SQL Agent initialized")
     
     def _build_graph(self):
@@ -112,16 +115,8 @@ class SQLAgent:
 
         return graph.compile()
     
+    @observe(name="text_to_sql_query")
     def query(self, question: str) -> dict:
-        """
-        Main method to query the agent with a natural language question
-        
-        Args:
-            question: Natural language question
-            
-        Returns:
-            dict with keys: question, sql, nl_response, valid, total_attempts
-        """
         initial_state: SQLAgentState = {
             "question": question,
             "sql": None,
@@ -138,14 +133,13 @@ class SQLAgent:
             "filtered_schema": None,
             "total_attempts": 0
         }
-        
+
         final_state = self.graph.invoke(
-        initial_state,
-        config={"recursion_limit": 100}
+            initial_state,
+            config={"recursion_limit": 100}
         )
 
-    
-        return {
+        result = {
             "question": final_state["question"],
             "sql": final_state.get("sql"),
             "nl_response": final_state.get("nl_response"),
@@ -156,8 +150,24 @@ class SQLAgent:
             "attempted_strategies": final_state.get("attempted_strategies", [])
         }
 
+        # Attach structured output to Langfuse trace
+        self.langfuse.update_current_trace(
+            input=question,
+            output=result.get("nl_response"),
+            metadata={
+                "valid": result["valid"],
+                "executed": result["executed"],
+                "total_attempts": result["total_attempts"],
+                "attempted_strategies": result["attempted_strategies"],
+                "has_sql": bool(result["sql"])
+            }
+        )
+
+        return result
+
+
     def close(self):
-        """Close database connection"""
-        self.cursor.close()
-        self.conn.close()
-        print("✅ Database connection closed")
+            """Close database connection"""
+            self.cursor.close()
+            self.conn.close()
+            print("✅ Database connection closed")
