@@ -19,34 +19,42 @@ An end-to-end LLM-powered Text-to-SQL system that converts natural language ques
 - Observability-ready with Langfuse (LLM tracing) and Prometheus + Grafana (planned: RPS, P95 latency, failures)
 
 ## Architecture Diagram 
-<img src="assets/architecture.JPG" width="100%" />
+<img src="assets/architecture.jpeg" width="100%" />
 
 ## Output Examples
 
 ### Normal Query (UI ↔ Agent Tracing)
 
+**Frontend UI result:**
 <p align="center">
-  <img src="assets/normal_query.png" width="49%" />
-  <img src="assets/langfuse/normal_query-crop.gif" width="49%" />
+  <img src="assets/normal_query.png" width="80%" />
 </p>
 
-*Left: Frontend UI result · Right: Langfuse trace showing successful agent execution*
+**Langfuse trace showing successful agent execution:**
+<p align="center">
+  <img src="assets/langfuse/normal_query-crop.gif" width="80%" />
+</p>
 
 
 ### Impossible / Unsupported Query (UI ↔ Agent Tracing)
 
+**Frontend UI response:**
 <p align="center">
-  <img src="assets/impossible_query.png" width="49%" />
-  <img src="assets/langfuse/impossible.png" width="49%" />
+  <img src="assets/impossible_query.png" width="80%" />
 </p>
 
-*Left: Frontend UI response · Right: Langfuse trace showing retries and graceful failure*
+**Langfuse trace showing retries and graceful failure:**
+<p align="center">
+  <img src="assets/langfuse/impossible.png" width="80%" />
+</p>
 
 
 ### System Monitoring
 
 **Grafana Metrics Dashboard**  
-<img src="assets/grafana.png" width="100%" />
+<p align="center">
+  <img src="assets/langfuse/impossible.png" width="80%" />
+</p>
 
 ## Running the Application
 
