@@ -1,0 +1,120 @@
+# Text-to-SQL Agent (Production-Oriented)
+
+An end-to-end LLM-powered Text-to-SQL system that converts natural language questions into validated, executable SQL queries, executes them safely on a relational database, and returns human-readable answers.
+
+## Key Features
+
+- Agentic Text-to-SQL using LangGraph (plan → generate → validate → correct → fallback)
+
+- Schema-aware generation using schema_summary.yaml to reduce hallucinations
+
+- SQL validation & safe execution guardrails before database access
+
+- Self-correction and retry strategies for invalid or ambiguous queries
+
+- Human-readable answers generated from query results
+
+- FastAPI backend with a lightweight frontend
+
+- Observability-ready with Langfuse (LLM tracing) and Prometheus + Grafana (planned: RPS, P95 latency, failures)
+
+## Architecture Diagram 
+<img src="assets/architecture.JPG" width="100%" />
+
+## Output Examples
+
+### Normal Query (UI ↔ Agent Tracing)
+
+<p align="center">
+  <img src="assets/normal_query.png" width="49%" />
+  <img src="assets/langfuse/normal_query-crop.gif" width="49%" />
+</p>
+
+*Left: Frontend UI result · Right: Langfuse trace showing successful agent execution*
+
+
+### Impossible / Unsupported Query (UI ↔ Agent Tracing)
+
+<p align="center">
+  <img src="assets/impossible_query.png" width="49%" />
+  <img src="assets/langfuse/impossible.png" width="49%" />
+</p>
+
+*Left: Frontend UI response · Right: Langfuse trace showing retries and graceful failure*
+
+
+### System Monitoring
+
+**Grafana Metrics Dashboard**  
+<img src="assets/grafana.png" width="100%" />
+
+
+## Folder Structure
+
+```text
+.
+├── assets/                      # Architecture diagrams, UI screenshots, demo outputs
+│
+├── backend_server/              # FastAPI backend service
+│   └── app.py                   # API entry point (query endpoint, CORS, routing)
+│
+├── front_end/                   # Lightweight static frontend
+│   └── index.html               # UI for submitting queries and viewing results
+│
+├── notebooks/                   # Experiments, debugging, and exploratory notebooks
+│
+├── src/                         # Core Text-to-SQL agent logic
+│   ├── __init__.py              # Marks src as a Python package
+│   │
+│   ├── agent/                   # LangGraph-based SQL agent
+│   │   ├── agent.py             # SQLAgent orchestration logic
+│   │   ├── nodes.py             # Agent nodes (generate, validate, retry, execute)
+│   │   ├── routing.py           # Control flow and fallback routing
+│   │   └── state.py             # Shared agent state definition
+│   │
+│   ├── config/                  # Centralized configuration
+│   │   └── settings.py          # Constants, limits, retries, environment configs
+│   │
+│   ├── db/                      # Database interaction layer
+│   │   └── db_connection.py     # DB connection and safe SQL execution
+│   │
+│   ├── prompts/                 # Prompt templates
+│   │   └── templates.py         # SQL generation and reasoning prompts
+│   │
+│   ├── schema/                  # Database schema context
+│   │   └── schema_summary.yaml  # Condensed schema used by the LLM
+│   │
+│   └── utils/                   # Shared utility helpers
+│       ├── llm.py               # LLM initialization and configuration helpers
+│       ├── print_result.py      # Pretty-printing and formatting agent outputs
+│       ├── schema_utils.py      # Schema loading and manipulation helpers
+│       └── sql_utils.py         # SQL cleaning and normalization helpers
+│
+├── .gitignore                   # Git ignore rules
+├── README.md                    # Project documentation
+├── main.py                      # Programmatic entry point for the SQL agent
+├── requirements.txt             # Python dependencies
+└── .env                         # Environment variables (excluded from version control)
+```
+
+## Acknowledgements
+
+- **FastAPI** — for building a clean, high-performance backend API
+- **LangChain** — for LLM orchestration and prompt-driven reasoning
+- **LangGraph** — for constructing structured, multi-step agent workflows
+- **OpenAI** — for large language models used in SQL generation
+- **PostgreSQL** — as the target relational databases for SQL execution
+- **Pytest** — for validating agent behavior and failure handling
+- **Langfuse** — for LLM tracing and debugging (planned integration)
+- **Prometheus** and **Grafana** — for metrics, monitoring, and alerting (planned integration)
+
+## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+This project is licensed under the **MIT License**.  
+See the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome — please open an issue or submit a pull request with a clear description of your changes.
