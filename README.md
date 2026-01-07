@@ -1,22 +1,16 @@
-# Text-to-SQL Agent (Production-Oriented)
+# Agentic Text-to-SQL System 
 
-An end-to-end LLM-powered Text-to-SQL system that converts natural language questions into validated, executable SQL queries, executes them safely on a relational database, and returns human-readable answers.
+End-to-end Text-to-SQL system with validation, fallback, safe execution, and observability.
 
 ## Key Features
 
-- Agentic Text-to-SQL using LangGraph (plan → generate → validate → correct → fallback)
-
-- Schema-aware generation using schema_summary.yaml to reduce hallucinations
-
-- SQL validation & safe execution guardrails before database access
-
-- Self-correction and retry strategies for invalid or ambiguous queries
-
-- Human-readable answers generated from query results
-
-- FastAPI backend with a lightweight frontend
-
-- Observability-ready with Langfuse (LLM tracing) and Prometheus + Grafana (planned: RPS, P95 latency, failures)
+- Agentic Text-to-SQL flow using LangGraph (plan → generate → validate → correct → fallback)
+- Schema-aware SQL generation using `schema_summary.yaml`
+- SQL validation and safe execution guardrails
+- Self-correction and retry for invalid or ambiguous queries
+- Human-readable answers from query results
+- FastAPI backend with lightweight frontend
+- Observability with Langfuse; Prometheus & Grafana (planned: RPS, P95, failures)
 
 ## Architecture Diagram 
 <img src="assets/architecture.jpeg" width="100%" />
@@ -71,8 +65,8 @@ An end-to-end LLM-powered Text-to-SQL system that converts natural language ques
 ### 1. Clone and Configure
 
 ```bash
-git clone https://github.com/yourusername/text-to-sql-agent.git
-cd text-to-sql-agent
+git clone https://github.com/7rohxt/agentic-text-to-sql-system.git
+cd agentic-text-to-sql-system
 ```
 
 Create a `.env` file with your database credentials:
