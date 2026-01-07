@@ -48,6 +48,85 @@ An end-to-end LLM-powered Text-to-SQL system that converts natural language ques
 **Grafana Metrics Dashboard**  
 <img src="assets/grafana.png" width="100%" />
 
+## Running the Application
+
+### Prerequisites
+
+- Python 3.10+
+- PostgreSQL (running locally)
+- Kaggle account
+- Docker
+- OpenAI API
+
+### Setup
+
+### 1. Clone and Configure
+
+```bash
+git clone https://github.com/yourusername/text-to-sql-agent.git
+cd text-to-sql-agent
+```
+
+Create a `.env` file with your database credentials:
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=instacart_db
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
+
+### 2. Set Up Database
+
+Create the database:
+
+```bash
+psql -U postgres -c "CREATE DATABASE instacart_db;"
+```
+
+Load the Instacart dataset by running the setup notebook:
+
+```bash
+jupyter notebook notebooks/01_instacart_data_setup.ipynb
+```
+
+### 3. Run the API
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn backend_server.app:app --reload
+```
+
+API available at: `http://localhost:8000`
+
+### Observability (Optional)
+
+### Langfuse (LLM Tracing)
+
+Add to your `.env` file:
+
+```bash
+LANGFUSE_PUBLIC_KEY=your_public_key
+LANGFUSE_SECRET_KEY=your_secret_key
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+### Prometheus & Grafana
+
+```bash
+# Prometheus (metrics at /metrics)
+docker run -d -p 9090:9090 \
+  -v ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
+  --name prometheus prom/prometheus
+
+# Grafana (optional visualization)
+docker run -d -p 3000:3000 --name grafana grafana/grafana
+```
+
+Grafana: `http://localhost:3000` (admin/admin)
 
 ## Folder Structure
 
